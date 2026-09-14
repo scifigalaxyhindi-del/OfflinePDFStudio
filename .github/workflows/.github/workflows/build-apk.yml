@@ -1,0 +1,43 @@
+name: Build Offline PDF Studio APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-apk.yml"
+      - "OfflinePDFStudio_NextBuild.zip"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Extract Android project
+        run: |
+          rm -rf build-src
+          mkdir build-src
+          unzip -q OfflinePDFStudio_NextBuild.zip -d build-src
+
+      - name: Build Debug APK
+        working-directory: build-src
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OfflinePDFStudio-debug-APK
+          path: build-src/app/build/outputs/apk/debug/app-debug.apk
